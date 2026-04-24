@@ -8,6 +8,8 @@ import Raviolz.u2w3d5BE.repositories.UtenteRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 
 @Service
 public class UtenteService {
@@ -34,5 +36,10 @@ public class UtenteService {
     public Utente findByEmail(String email) {
         return uRep.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Utente con email " + email + " non è stato trovato"));
+    }
+
+    public Utente findById(UUID id) {
+        return uRep.findById(id)
+                .orElseThrow(() -> new NotFoundException("Utente con id " + id + " non trovato"));
     }
 }
