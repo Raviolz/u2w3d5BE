@@ -20,10 +20,16 @@ public class ErrorsHandler {
 
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN) // 400
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorsDTO handleuUnauthorizedEx(AuthorizationDeniedException ex) {
         return new ErrorsDTO("Non hai i permessi per accedere ", LocalDateTime.now());
 
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorsDTO handleBadRequest(BadRequestException ex) {
+        return new ErrorsDTO(ex.getMessage(), LocalDateTime.now());
     }
 
 

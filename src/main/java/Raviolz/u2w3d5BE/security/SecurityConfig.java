@@ -5,9 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
@@ -18,23 +17,28 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 
 public class SecurityConfig {
 
+    private final TokenFilter tokenFilter;
+
+    public SecurityConfig(TokenFilter tokenFilter) {
+        this.tokenFilter = tokenFilter;
+    }
+
     @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
-
-        httpSecurity.authorizeHttpRequests(req -> req.requestMatchers("/auth/**").permitAll());
+        httpSecurity.authorizeHttpRequests(req -> req
+                .requestMatchers("/auth/**").permitAll()
+                .anyRequest().authenticated()
+        );
 
         httpSecurity.sessionManagement(sessions -> sessions.sessionCreationPolicy(STATELESS));
-
         httpSecurity.formLogin(formLogin -> formLogin.disable());
-
         httpSecurity.csrf(csrf -> csrf.disable());
+
+        httpSecurity.addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }
 
-    @Bean
-    public PasswordEncoder getBCrypt() {
-        return new BCryptPasswordEncoder(12);
-    }
+
 }

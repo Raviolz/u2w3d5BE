@@ -20,7 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonIgnoreProperties({"AccountNonExpired", "AccountonLocked", "authorities", "credentialsNonExpired", "enable"})
+@JsonIgnoreProperties({"AccountNonExpired", "AccountonLocked", "authorities", "credentialsNonExpired", "enable", "accountNonExpired", "accountNonLocked", "enabled"})
 public class Utente implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
