@@ -3,6 +3,7 @@ package Raviolz.u2w3d5BE.payloads;
 import Raviolz.u2w3d5BE.entities.Ruolo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record NuovoUtenteDTO(
         @NotBlank(message = "Nome obbligatorio")
@@ -13,7 +14,7 @@ public record NuovoUtenteDTO(
         String email,
         @NotBlank(message = "Password obbligatoria")
         String password,
-        @NotBlank(message = "Seleziona come vuoi registrarti")
+        @NotNull(message = "Seleziona come vuoi registrarti")
         Ruolo ruolo
 ) {
 }

@@ -1,6 +1,7 @@
 package Raviolz.u2w3d5BE.controllers;
 
 import Raviolz.u2w3d5BE.entities.Utente;
+import Raviolz.u2w3d5BE.payloads.NuovoUtenteDTO;
 import Raviolz.u2w3d5BE.payloads.NuovoUtenteResDTO;
 import Raviolz.u2w3d5BE.services.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,8 @@ public class UtenteController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public NuovoUtenteResDTO saveUtente(@RequestBody Utente utente) {
-        Utente saved = uService.save(utente);
+    public NuovoUtenteResDTO saveUtente(@RequestBody NuovoUtenteDTO body) {
+        Utente saved = uService.save(body);
         return new NuovoUtenteResDTO(saved.getId());
     }
 }
