@@ -1,4 +1,4 @@
-package Raviolz.u2w3d5BE.exception;
+package Raviolz.u2w3d5BE.payloads;
 
 import java.time.LocalDateTime;
 
