@@ -22,7 +22,7 @@ public class SecurityConfig {
 
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
 
-        httpSecurity.authorizeHttpRequests(req -> req.requestMatchers("/**").permitAll());
+        httpSecurity.authorizeHttpRequests(req -> req.requestMatchers("/auth/**").permitAll());
 
         httpSecurity.sessionManagement(sessions -> sessions.sessionCreationPolicy(STATELESS));
 
