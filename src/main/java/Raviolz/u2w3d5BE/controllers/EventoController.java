@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/eventi")
@@ -42,4 +43,36 @@ public class EventoController {
 
         return evService.save(body, utenteLoggato);
     }
+
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ORGANIZZATORE')")
+    public Evento updateEvento(
+            @PathVariable UUID id,
+            @RequestBody @Validated EventoDTO body,
+            BindingResult validationResult,
+            @AuthenticationPrincipal Utente utenteLoggato
+    ) {
+        if (validationResult.hasErrors()) {
+            List<String> errors = validationResult.getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .toList();
+
+            throw new ValidationException(errors);
+        }
+
+        return evService.update(id, body, utenteLoggato);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('ORGANIZZATORE')")
+    public void deleteEvento(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Utente utenteLoggato
+    ) {
+        evService.delete(id, utenteLoggato);
+    }
+
+
 }
