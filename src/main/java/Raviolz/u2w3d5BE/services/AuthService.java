@@ -15,7 +15,11 @@ public class AuthService {
     private final TokenTools tokenTools;
     private final PasswordEncoder bcrypt;
 
-    public AuthService(UtenteService uService, TokenTools tokenTools, PasswordEncoder bcrypt) {
+    public AuthService(
+            UtenteService uService,
+            TokenTools tokenTools,
+            PasswordEncoder bcrypt
+    ) {
         this.uService = uService;
         this.tokenTools = tokenTools;
         this.bcrypt = bcrypt;
@@ -23,17 +27,18 @@ public class AuthService {
 
     public String checkCredentialAndGenerateToken(LoginDTO body) {
 
+        Utente found;
+
         try {
-            Utente found = this.uService.findByEmail(body.email());
-
-            if (this.bcrypt.matches(body.password(), found.getPassword())) {
-                return this.tokenTools.generateToken(found);
-            } else {
-                throw new UnauthorizedException("Credenziali errate");
-            }
-
+            found = this.uService.findByEmail(body.email());
         } catch (NotFoundException ex) {
             throw new UnauthorizedException("Credenziali errate");
         }
+
+        if (!this.bcrypt.matches(body.password(), found.getPassword())) {
+            throw new UnauthorizedException("Credenziali errate");
+        }
+
+        return this.tokenTools.generateToken(found);
     }
 }

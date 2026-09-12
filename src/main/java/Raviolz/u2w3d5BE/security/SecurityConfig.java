@@ -1,5 +1,6 @@
 package Raviolz.u2w3d5BE.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -10,11 +11,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
-
 @EnableMethodSecurity
 @Configuration
 @EnableWebSecurity
-
 public class SecurityConfig {
 
     private final TokenFilter tokenFilter;
@@ -31,14 +30,25 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
         );
 
-        httpSecurity.sessionManagement(sessions -> sessions.sessionCreationPolicy(STATELESS));
+        httpSecurity.sessionManagement(
+                sessions -> sessions.sessionCreationPolicy(STATELESS)
+        );
+
         httpSecurity.formLogin(formLogin -> formLogin.disable());
+
         httpSecurity.csrf(csrf -> csrf.disable());
 
-        httpSecurity.addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) ->
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                )
+        );
+
+        httpSecurity.addFilterBefore(
+                tokenFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
 
         return httpSecurity.build();
     }
-
-
 }

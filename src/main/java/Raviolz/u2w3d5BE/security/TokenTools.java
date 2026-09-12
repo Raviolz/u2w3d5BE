@@ -7,47 +7,63 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 
-
 @Component
 public class TokenTools {
-    private final String secret;
 
-    public TokenTools(@Value("${jwt_secret}") String secret) {
-        this.secret = secret;
-    }
+    @Value("${jwt_secret}")
+    private String secret;
 
     public String generateToken(Utente utente) {
         return Jwts.builder()
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
-                .subject(String.valueOf(utente.getId()))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .expiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + 1000L * 60 * 60 * 24 * 7
+                        )
+                )
+                .subject(utente.getId().toString())
+                .signWith(
+                        Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8)
+                        )
+                )
                 .compact();
     }
 
-    ;
-
-
     public void verifyToken(String token) {
         try {
-            Jwts.parser().verifyWith(Keys.hmacShaKeyFor(secret.getBytes())).build().parse(token);
+            Jwts.parser()
+                    .verifyWith(
+                            Keys.hmacShaKeyFor(
+                                    secret.getBytes(StandardCharsets.UTF_8)
+                            )
+                    )
+                    .build()
+                    .parseSignedClaims(token);
         } catch (Exception ex) {
-            throw new UnauthorizedException("Problemi con il token, effettua di nuovo il login!");
-
-
+            throw new UnauthorizedException(
+                    "Token non valido o scaduto"
+            );
         }
     }
 
     public UUID extractIdFromToken(String token) {
-        return UUID.fromString(Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
+        String id = Jwts.parser()
+                .verifyWith(
+                        Keys.hmacShaKeyFor(
+                                secret.getBytes(StandardCharsets.UTF_8)
+                        )
+                )
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getSubject());
+                .getSubject();
 
+        return UUID.fromString(id);
     }
 }
