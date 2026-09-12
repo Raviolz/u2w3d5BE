@@ -5,6 +5,8 @@ import Raviolz.u2w3d5BE.entities.Utente;
 import Raviolz.u2w3d5BE.exception.ValidationException;
 import Raviolz.u2w3d5BE.payloads.EventoDTO;
 import Raviolz.u2w3d5BE.services.EventoService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

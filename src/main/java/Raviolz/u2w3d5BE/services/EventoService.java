@@ -50,11 +50,13 @@ public class EventoService {
             throw new UnauthorizedException("Puoi modificare solo i tuoi eventi");
         }
 
-        found.setTitolo(body.titolo());
-        found.setDescrizione(body.descrizione());
-        found.setData(body.data());
-        found.setLuogo(body.luogo());
-        found.setPostiTotali(body.postiTotali());
+        found.update(
+                body.titolo(),
+                body.descrizione(),
+                body.data(),
+                body.luogo(),
+                body.postiTotali()
+        );
 
         return eRep.save(found);
     }
