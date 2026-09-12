@@ -1,17 +1,13 @@
 package Raviolz.u2w3d5BE.controllers;
 
-import Raviolz.u2w3d5BE.entities.Evento;
 import Raviolz.u2w3d5BE.entities.Utente;
-import Raviolz.u2w3d5BE.exception.ValidationException;
 import Raviolz.u2w3d5BE.payloads.EventoDTO;
+import Raviolz.u2w3d5BE.payloads.EventoResponseDTO;
 import Raviolz.u2w3d5BE.services.EventoService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,47 +19,47 @@ public class EventoController {
 
     private final EventoService evService;
 
-    public EventoController(EventoService eventoService) {
-        this.evService = eventoService;
+    public EventoController(EventoService evService) {
+        this.evService = evService;
+    }
+
+    @GetMapping
+    public List<EventoResponseDTO> getEventi() {
+        return this.evService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public EventoResponseDTO getEventoById(
+            @PathVariable UUID id
+    ) {
+        return this.evService.findByIdResponse(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('ORGANIZZATORE')")
-    public Evento saveEvento(
-            @RequestBody @Validated EventoDTO body,
-            BindingResult validationResult,
+    public EventoResponseDTO saveEvento(
+            @RequestBody @Valid EventoDTO body,
             @AuthenticationPrincipal Utente utenteLoggato
     ) {
-        if (validationResult.hasErrors()) {
-            List<String> errors = validationResult.getFieldErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .toList();
-
-            throw new ValidationException(errors);
-        }
-
-        return evService.save(body, utenteLoggato);
+        return this.evService.save(
+                body,
+                utenteLoggato
+        );
     }
-
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ORGANIZZATORE')")
-    public Evento updateEvento(
+    public EventoResponseDTO updateEvento(
             @PathVariable UUID id,
-            @RequestBody @Validated EventoDTO body,
-            BindingResult validationResult,
+            @RequestBody @Valid EventoDTO body,
             @AuthenticationPrincipal Utente utenteLoggato
     ) {
-        if (validationResult.hasErrors()) {
-            List<String> errors = validationResult.getFieldErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .toList();
-
-            throw new ValidationException(errors);
-        }
-
-        return evService.update(id, body, utenteLoggato);
+        return this.evService.update(
+                id,
+                body,
+                utenteLoggato
+        );
     }
 
     @DeleteMapping("/{id}")
@@ -73,8 +69,9 @@ public class EventoController {
             @PathVariable UUID id,
             @AuthenticationPrincipal Utente utenteLoggato
     ) {
-        evService.delete(id, utenteLoggato);
+        this.evService.delete(
+                id,
+                utenteLoggato
+        );
     }
-
-
 }

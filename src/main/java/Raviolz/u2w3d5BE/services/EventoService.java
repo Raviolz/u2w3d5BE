@@ -2,15 +2,17 @@ package Raviolz.u2w3d5BE.services;
 
 import Raviolz.u2w3d5BE.entities.Evento;
 import Raviolz.u2w3d5BE.entities.Utente;
-import Raviolz.u2w3d5BE.exception.BadRequestException;
+import Raviolz.u2w3d5BE.exception.AlreadyExistException;
 import Raviolz.u2w3d5BE.exception.NotFoundException;
-import Raviolz.u2w3d5BE.exception.UnauthorizedException;
 import Raviolz.u2w3d5BE.payloads.EventoDTO;
+import Raviolz.u2w3d5BE.payloads.EventoResponseDTO;
 import Raviolz.u2w3d5BE.repositories.EventoRepository;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
-
 
 @Service
 public class EventoService {
@@ -21,53 +23,141 @@ public class EventoService {
         this.eRep = eRep;
     }
 
-    public Evento save(EventoDTO body, Utente organizzatore) {
-        if (eRep.existsByTitoloAndDataAndLuogo(body.titolo(), body.data(), body.luogo())) {
-            throw new BadRequestException("Evento già esistente");
-        }
-        Evento evento = new Evento(
-                body.titolo(),
-                body.descrizione(),
+    public EventoResponseDTO save(
+            EventoDTO body,
+            Utente organizzatore
+    ) {
+
+        String titolo = body.titolo().trim();
+        String descrizione = body.descrizione().trim();
+        String luogo = body.luogo().trim();
+
+        if (this.eRep.existsByTitoloIgnoreCaseAndDataAndLuogoIgnoreCase(
+                titolo,
                 body.data(),
-                body.luogo(),
+                luogo
+        )) {
+            throw new AlreadyExistException(
+                    "Esiste già un evento con lo stesso titolo, data e luogo"
+            );
+        }
+
+        Evento evento = new Evento(
+                titolo,
+                descrizione,
+                body.data(),
+                luogo,
                 body.postiTotali(),
                 organizzatore
         );
 
-        return eRep.save(evento);
+        Evento saved = this.eRep.save(evento);
+
+        return this.toResponseDTO(saved);
     }
 
+    @Transactional(readOnly = true)
+    public List<EventoResponseDTO> findAll() {
+        return this.eRep.findAllByOrderByDataAsc()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public EventoResponseDTO findByIdResponse(UUID id) {
+        return this.toResponseDTO(this.findById(id));
+    }
 
     public Evento findById(UUID id) {
-        return eRep.findById(id)
-                .orElseThrow(() -> new NotFoundException("Evento con id " + id + " non trovato"));
+        return this.eRep.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException(
+                                "Evento con id " + id + " non trovato"
+                        )
+                );
     }
 
-    public Evento update(UUID id, EventoDTO body, Utente utenteLoggato) {
+    public EventoResponseDTO update(
+            UUID id,
+            EventoDTO body,
+            Utente utenteLoggato
+    ) {
+
         Evento found = this.findById(id);
 
-        if (!found.getOrganizzatore().getId().equals(utenteLoggato.getId())) {
-            throw new UnauthorizedException("Puoi modificare solo i tuoi eventi");
+        if (!found.getOrganizzatore()
+                .getId()
+                .equals(utenteLoggato.getId())) {
+
+            throw new AuthorizationDeniedException(
+                    "Puoi modificare solo i tuoi eventi"
+            );
+        }
+
+        String titolo = body.titolo().trim();
+        String descrizione = body.descrizione().trim();
+        String luogo = body.luogo().trim();
+
+        if (this.eRep
+                .existsByTitoloIgnoreCaseAndDataAndLuogoIgnoreCaseAndIdNot(
+                        titolo,
+                        body.data(),
+                        luogo,
+                        id
+                )) {
+
+            throw new AlreadyExistException(
+                    "Esiste già un altro evento con lo stesso titolo, data e luogo"
+            );
         }
 
         found.update(
-                body.titolo(),
-                body.descrizione(),
+                titolo,
+                descrizione,
                 body.data(),
-                body.luogo(),
+                luogo,
                 body.postiTotali()
         );
 
-        return eRep.save(found);
+        Evento updated = this.eRep.save(found);
+
+        return this.toResponseDTO(updated);
     }
 
-    public void delete(UUID id, Utente utenteLoggato) {
+    public void delete(
+            UUID id,
+            Utente utenteLoggato
+    ) {
+
         Evento found = this.findById(id);
 
-        if (!found.getOrganizzatore().getId().equals(utenteLoggato.getId())) {
-            throw new UnauthorizedException("Non puoi eliminare gli eventi degli altri");
+        if (!found.getOrganizzatore()
+                .getId()
+                .equals(utenteLoggato.getId())) {
+
+            throw new AuthorizationDeniedException(
+                    "Puoi eliminare solo i tuoi eventi"
+            );
         }
 
-        eRep.delete(found);
+        this.eRep.delete(found);
+    }
+
+    private EventoResponseDTO toResponseDTO(Evento evento) {
+
+        Utente organizzatore = evento.getOrganizzatore();
+
+        return new EventoResponseDTO(
+                evento.getId(),
+                evento.getTitolo(),
+                evento.getDescrizione(),
+                evento.getData(),
+                evento.getLuogo(),
+                evento.getPostiTotali(),
+                organizzatore.getId(),
+                organizzatore.getNome(),
+                organizzatore.getCognome()
+        );
     }
 }
